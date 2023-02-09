@@ -12,14 +12,40 @@ class Posts extends StatefulWidget {
   State<Posts> createState() => _PostsState();
 }
 
-class _PostsState extends State<Posts> {
+class _PostsState extends State<Posts>
+    with SingleTickerProviderStateMixin, RestorationMixin {
   late Future<List<Post>> posts;
   String topic = '';
   String order = '';
+  final RestorableInt tabIndex = RestorableInt(0);
+
+  @override
+  String get restorationId => 'tab_scrollable_demo';
+
+  TabController? _tabController;
   @override
   void initState() {
     super.initState();
     posts = fetchPosts();
+    _tabController = TabController(
+      initialIndex: 0,
+      length: 2,
+      vsync: this,
+    );
+    _tabController!.addListener(() {
+      // When the tab controller's value is updated, make sure to update the
+      // tab index value, which is state restorable.
+      setState(() {
+        tabIndex.value = _tabController!.index;
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    _tabController!.dispose();
+    tabIndex.dispose();
+    super.dispose();
   }
 
   @override
@@ -61,145 +87,151 @@ class _PostsState extends State<Posts> {
         automaticallyImplyLeading: false,
         backgroundColor: Colors.white,
       ),
-      body: Column(
+      body: TabBarView(
+        controller: _tabController,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                PopupMenuButton<String>(
-                  child: Row(
-                    children: [
-                      Text('구미동', style: TextStyle(color: Colors.black)),
-                      Icon(
-                        Icons.arrow_drop_down,
-                        color: Colors.blue,
-                      )
-                    ],
-                  ),
-                  onSelected: (value) {
-                    setState(() {
-                      // topic = value;
-                    });
-                  },
-                  itemBuilder: (context) => <PopupMenuItem<String>>[
-                    PopupMenuItem<String>(
-                      value: '서초동',
-                      child: Text(
-                        '서초동',
+          Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  children: [
+                    PopupMenuButton<String>(
+                      child: Row(
+                        children: [
+                          Text('구미동', style: TextStyle(color: Colors.black)),
+                          Icon(
+                            Icons.arrow_drop_down,
+                            color: Colors.blue,
+                          )
+                        ],
                       ),
+                      onSelected: (value) {
+                        setState(() {
+                          // topic = value;
+                        });
+                      },
+                      itemBuilder: (context) => <PopupMenuItem<String>>[
+                        PopupMenuItem<String>(
+                          value: '서초동',
+                          child: Text(
+                            '서초동',
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: '다른 동네 찾아보기',
+                          child: Text(
+                            '다른 동네 찾아보기',
+                          ),
+                        ),
+                      ],
                     ),
-                    PopupMenuItem<String>(
-                      value: '다른 동네 찾아보기',
-                      child: Text(
-                        '다른 동네 찾아보기',
+                    Spacer(),
+                    PopupMenuButton<String>(
+                      child: Row(
+                        children: [
+                          Text(order.isEmpty ? '최신순' : order),
+                          Icon(Icons.arrow_drop_down)
+                        ],
                       ),
+                      padding: EdgeInsets.zero,
+                      onSelected: (value) {
+                        setState(() {
+                          topic = value;
+                        });
+                      },
+                      itemBuilder: (context) => <PopupMenuItem<String>>[
+                        PopupMenuItem<String>(
+                          value: '인기순',
+                          child: Text(
+                            '인기순',
+                          ),
+                        ),
+                      ],
+                    ),
+                    VerticalDivider(),
+                    PopupMenuButton<String>(
+                      child: Row(
+                        children: [
+                          Text(topic.isEmpty ? '전체 토픽' : topic),
+                          Icon(Icons.arrow_drop_down)
+                        ],
+                      ),
+                      padding: EdgeInsets.zero,
+                      onSelected: (value) {
+                        setState(() {
+                          topic = value;
+                        });
+                      },
+                      itemBuilder: (context) => <PopupMenuItem<String>>[
+                        PopupMenuItem<String>(
+                          value: '일상',
+                          child: Text(
+                            '일상',
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: '중고거래',
+                          child: Text(
+                            '중고거래',
+                          ),
+                        ),
+                        PopupMenuItem<String>(
+                          value: '제보',
+                          child: Text(
+                            '제보',
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-                Spacer(),
-                PopupMenuButton<String>(
-                  child: Row(
-                    children: [
-                      Text(order.isEmpty ? '최신순' : order),
-                      Icon(Icons.arrow_drop_down)
-                    ],
-                  ),
-                  padding: EdgeInsets.zero,
-                  onSelected: (value) {
-                    setState(() {
-                      topic = value;
-                    });
-                  },
-                  itemBuilder: (context) => <PopupMenuItem<String>>[
-                    PopupMenuItem<String>(
-                      value: '인기순',
-                      child: Text(
-                        '인기순',
-                      ),
-                    ),
-                  ],
-                ),
-                VerticalDivider(),
-                PopupMenuButton<String>(
-                  child: Row(
-                    children: [
-                      Text(topic.isEmpty ? '전체 토픽' : topic),
-                      Icon(Icons.arrow_drop_down)
-                    ],
-                  ),
-                  padding: EdgeInsets.zero,
-                  onSelected: (value) {
-                    setState(() {
-                      topic = value;
-                    });
-                  },
-                  itemBuilder: (context) => <PopupMenuItem<String>>[
-                    PopupMenuItem<String>(
-                      value: '일상',
-                      child: Text(
-                        '일상',
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: '중고거래',
-                      child: Text(
-                        '중고거래',
-                      ),
-                    ),
-                    PopupMenuItem<String>(
-                      value: '제보',
-                      child: Text(
-                        '제보',
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              ),
+              Expanded(
+                  child: FutureBuilder<List<Post>>(
+                future: posts,
+                builder: (context, snapshot) {
+                  if (snapshot.hasData) {
+                    return RefreshIndicator(
+                        child: ListView.builder(
+                            padding: const EdgeInsets.all(8),
+                            itemCount: snapshot.data?.length ?? 0,
+                            itemBuilder: (BuildContext context, int index) {
+                              Post? post = snapshot.data?[index];
+                              if (post != null) {}
+                              if (index == 0) {
+                                return Column(
+                                  children: [
+                                    Padding(
+                                      padding:
+                                          const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                                      child: Placeholder(
+                                        fallbackHeight: 100,
+                                      ),
+                                    ),
+                                    PostCell(post: post)
+                                  ],
+                                );
+                              }
+
+                              return PostCell(post: post);
+                            }),
+                        onRefresh: () async {
+                          setState(() {
+                            posts = fetchPosts();
+                          });
+                        });
+                  } else if (snapshot.hasError) {
+                    return Text("${snapshot.error}");
+                  }
+
+                  // 기본적으로 로딩 Spinner를 보여줍니다.
+                  return const Center(child: CircularProgressIndicator());
+                },
+              )),
+            ],
           ),
-          Expanded(
-              child: FutureBuilder<List<Post>>(
-            future: posts,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                return RefreshIndicator(
-                    child: ListView.builder(
-                        padding: const EdgeInsets.all(8),
-                        itemCount: snapshot.data?.length ?? 0,
-                        itemBuilder: (BuildContext context, int index) {
-                          Post? post = snapshot.data?[index];
-                          if (post != null) {}
-                          if (index == 0) {
-                            return Column(
-                              children: [
-                                Padding(
-                                  padding:
-                                      const EdgeInsets.fromLTRB(0, 8, 0, 8),
-                                  child: Placeholder(
-                                    fallbackHeight: 100,
-                                  ),
-                                ),
-                                PostCell(post: post)
-                              ],
-                            );
-                          }
-
-                          return PostCell(post: post);
-                        }),
-                    onRefresh: () async {
-                      setState(() {
-                        posts = fetchPosts();
-                      });
-                    });
-              } else if (snapshot.hasError) {
-                return Text("${snapshot.error}");
-              }
-
-              // 기본적으로 로딩 Spinner를 보여줍니다.
-              return const Center(child: CircularProgressIndicator());
-            },
-          )),
+          Placeholder()
         ],
       ),
       floatingActionButton: FloatingActionButton(
@@ -210,6 +242,12 @@ class _PostsState extends State<Posts> {
         child: const Icon(Icons.add),
       ),
     ));
+  }
+
+  @override
+  void restoreState(RestorationBucket? oldBucket, bool initialRestore) {
+    // TODO: implement restoreState
+    registerForRestoration(tabIndex, 'tab_index');
   }
 }
 
