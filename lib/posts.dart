@@ -27,36 +27,23 @@ class _PostsState extends State<Posts> {
     return SafeArea(
         child: Scaffold(
       appBar: AppBar(
-        title: PopupMenuButton<String>(
-          child: Row(
-            children: [
-              Text('구미동', style: TextStyle(color: Colors.black)),
-              Icon(
-                Icons.arrow_drop_down,
-                color: Colors.blue,
-              )
-            ],
-          ),
-          onSelected: (value) {
-            setState(() {
-              // topic = value;
-            });
-          },
-          itemBuilder: (context) => <PopupMenuItem<String>>[
-            PopupMenuItem<String>(
-              value: '서초동',
+        title: ToggleButtons(renderBorder: false, children: [
+          TextButton(
+              onPressed: () {},
               child: Text(
-                '서초동',
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: '다른 동네 찾아보기',
+                '게시판',
+                style: TextStyle(fontSize: 20),
+              )),
+          TextButton(
+              onPressed: () {},
               child: Text(
-                '다른 동네 찾아보기',
-              ),
-            ),
-          ],
-        ),
+                '채팅',
+                style: TextStyle(fontSize: 20),
+              )),
+        ], isSelected: [
+          true,
+          false
+        ]),
         actions: [
           IconButton(
               onPressed: () {},
@@ -77,9 +64,39 @@ class _PostsState extends State<Posts> {
       body: Column(
         children: [
           Padding(
-            padding: const EdgeInsets.all(8.0),
+            padding: const EdgeInsets.all(16.0),
             child: Row(
               children: [
+                PopupMenuButton<String>(
+                  child: Row(
+                    children: [
+                      Text('구미동', style: TextStyle(color: Colors.black)),
+                      Icon(
+                        Icons.arrow_drop_down,
+                        color: Colors.blue,
+                      )
+                    ],
+                  ),
+                  onSelected: (value) {
+                    setState(() {
+                      // topic = value;
+                    });
+                  },
+                  itemBuilder: (context) => <PopupMenuItem<String>>[
+                    PopupMenuItem<String>(
+                      value: '서초동',
+                      child: Text(
+                        '서초동',
+                      ),
+                    ),
+                    PopupMenuItem<String>(
+                      value: '다른 동네 찾아보기',
+                      child: Text(
+                        '다른 동네 찾아보기',
+                      ),
+                    ),
+                  ],
+                ),
                 Spacer(),
                 PopupMenuButton<String>(
                   child: Row(
@@ -152,67 +169,23 @@ class _PostsState extends State<Posts> {
                         itemCount: snapshot.data?.length ?? 0,
                         itemBuilder: (BuildContext context, int index) {
                           Post? post = snapshot.data?[index];
-                          return SizedBox(
-                              child: Column(
-                            children: [
-                              ListTile(
-                                contentPadding:
-                                    EdgeInsets.only(left: 0.0, right: 0.0),
-                                title: Text(snapshot.data?[index].title ?? ''),
-                                subtitle: Text(
-                                    snapshot.data?[index].userId.toString() ??
-                                        ''),
-                                trailing: const Icon(
-                                  Icons.post_add,
-                                  size: 60,
+                          if (post != null) {}
+                          if (index == 0) {
+                            return Column(
+                              children: [
+                                Padding(
+                                  padding:
+                                      const EdgeInsets.fromLTRB(0, 8, 0, 8),
+                                  child: Placeholder(
+                                    fallbackHeight: 100,
+                                  ),
                                 ),
-                                style: ListTileStyle.list,
-                                onTap: () {
-                                  if (post?.id != null) {
-                                    Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                            builder: (context) => PostDetail(
-                                                  postId: post!.id,
-                                                )));
-                                  }
-                                },
-                              ),
-                              Divider(),
-                              Row(
-                                children: [
-                                  const Icon(Icons.remove_red_eye),
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                    child: Text('123'),
-                                  ),
-                                  const Icon(Icons.comment),
-                                  const Padding(
-                                    padding:
-                                        const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                    child: Text('4'),
-                                  ),
-                                  IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.arrow_upward)),
-                                  const Padding(
-                                    padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                    child: Text('345'),
-                                  ),
-                                  IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.arrow_downward)),
-                                  const Spacer(),
-                                  IconButton(
-                                      onPressed: () {},
-                                      icon: const Icon(Icons.bookmark)),
-                                ],
-                              ),
-                              const Divider(
-                                thickness: 8,
-                              )
-                            ],
-                          ));
+                                PostCell(post: post)
+                              ],
+                            );
+                          }
+
+                          return PostCell(post: post);
                         }),
                     onRefresh: () async {
                       setState(() {
@@ -236,6 +209,73 @@ class _PostsState extends State<Posts> {
         },
         child: const Icon(Icons.add),
       ),
+    ));
+  }
+}
+
+class PostCell extends StatelessWidget {
+  const PostCell({
+    super.key,
+    required this.post,
+  });
+
+  final Post? post;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+        child: Column(
+      children: [
+        ListTile(
+          contentPadding: EdgeInsets.only(left: 0.0, right: 0.0),
+          title: Text(post?.title ?? ''),
+          subtitle: Row(
+            children: [Text('ㅇㅇ분 전')],
+          ),
+          trailing: const Icon(
+            Icons.post_add,
+            size: 60,
+          ),
+          style: ListTileStyle.list,
+          onTap: () {
+            if (post?.id != null) {
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (context) => PostDetail(
+                            postId: post!.id,
+                          )));
+            }
+          },
+        ),
+        Divider(),
+        Row(
+          children: [
+            const Icon(Icons.remove_red_eye),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text('123'),
+            ),
+            const Icon(Icons.comment),
+            const Padding(
+              padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text('4'),
+            ),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.arrow_upward)),
+            const Padding(
+              padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text('345'),
+            ),
+            IconButton(
+                onPressed: () {}, icon: const Icon(Icons.arrow_downward)),
+            const Spacer(),
+            IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark)),
+          ],
+        ),
+        const Divider(
+          thickness: 8,
+        )
+      ],
     ));
   }
 }
