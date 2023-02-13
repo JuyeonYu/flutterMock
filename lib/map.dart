@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'search.dart';
+import 'package:geolocator/geolocator.dart';
 
 class Map extends StatefulWidget {
   const Map({super.key});
@@ -11,11 +12,43 @@ class Map extends StatefulWidget {
 
 class _MapState extends State<Map> {
   late GoogleMapController mapController;
+  LatLng? _currentPosition;
 
   final LatLng _center = const LatLng(45.521563, -122.677433);
 
-  void _onMapCreated(GoogleMapController controller) {
+  Future<void> _onMapCreated(GoogleMapController controller) async {
     mapController = controller;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _getCurrentLocation();
+  }
+
+  void _getCurrentLocation() async {
+    LocationPermission permission = await Geolocator.checkPermission();
+
+    if (permission == LocationPermission.denied) {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission != LocationPermission.deniedForever) {
+        await setCurrentPosition();
+        return;
+      }
+    }
+    await setCurrentPosition();
+  }
+
+  Future<void> setCurrentPosition() async {
+    Position position = await Geolocator.getCurrentPosition(
+      desiredAccuracy: LocationAccuracy.high,
+    );
+    mapController.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+        target: LatLng(position.latitude, position.longitude), zoom: 15.0)));
+
+    setState(() {
+      _currentPosition = LatLng(position.latitude, position.longitude);
+    });
   }
 
   @override
@@ -25,14 +58,13 @@ class _MapState extends State<Map> {
         body: Stack(
           children: [
             GoogleMap(
-              myLocationButtonEnabled: false,
-              myLocationEnabled: true,
-              onMapCreated: _onMapCreated,
-              initialCameraPosition: CameraPosition(
-                target: _center,
-                zoom: 11.0,
-              ),
-            ),
+                myLocationButtonEnabled: false,
+                myLocationEnabled: true,
+                onMapCreated: _onMapCreated,
+                initialCameraPosition: CameraPosition(
+                    target:
+                        _currentPosition == null ? _center : _currentPosition!,
+                    zoom: 11.0)),
             Positioned(
                 top: 50,
                 left: 8,
@@ -56,8 +88,7 @@ class _MapState extends State<Map> {
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            // Navigator.push(context,
-            //     MaterialPageRoute(builder: (context) => const CreatePost()));
+            _getCurrentLocation();
           },
           child: const Icon(Icons.add),
         ),
