@@ -251,7 +251,7 @@ class _PostsState extends State<Posts>
   }
 }
 
-class PostCell extends StatelessWidget {
+class PostCell extends StatefulWidget {
   const PostCell({
     super.key,
     required this.post,
@@ -260,28 +260,39 @@ class PostCell extends StatelessWidget {
   final Post? post;
 
   @override
+  State<PostCell> createState() => _PostCellState();
+}
+
+class _PostCellState extends State<PostCell> {
+  @override
   Widget build(BuildContext context) {
+    var replies = (widget.post?.replies ?? 0);
+    var views = (widget.post?.views ?? 0);
+    var likes = (widget.post?.likes ?? 0);
+    var isBookmark = widget.post?.isBookmark ?? false;
+    var likeType = widget.post?.likeType ?? LikeType.none;
+
     return SizedBox(
         child: Column(
       children: [
         ListTile(
           contentPadding: EdgeInsets.only(left: 0.0, right: 0.0),
-          title: Text(post?.title ?? ''),
+          title: Text(widget.post?.title ?? ''),
           subtitle: Row(
-            children: [Text('ㅇㅇ분 전')],
-          ),
-          trailing: const Icon(
-            Icons.post_add,
-            size: 60,
+            children: [Text('길동')],
           ),
           style: ListTileStyle.list,
           onTap: () {
-            if (post?.id != null) {
+            if (widget.post?.id != null) {
+              setState(() {
+                widget.post?.views = (widget.post?.views ?? 0) + 1;
+              });
+
               Navigator.push(
                   context,
                   MaterialPageRoute(
                       builder: (context) => PostDetail(
-                            postId: post!.id,
+                            postId: widget.post!.id,
                           )));
             }
           },
@@ -290,24 +301,79 @@ class PostCell extends StatelessWidget {
         Row(
           children: [
             const Icon(Icons.remove_red_eye),
-            const Padding(
+            Padding(
               padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
-              child: Text('123'),
+              child: Text('$views'),
             ),
             const Icon(Icons.comment),
-            const Padding(
+            Padding(
               padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-              child: Text('4'),
-            ),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.arrow_upward)),
-            const Padding(
-              padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
-              child: Text('345'),
+              child: Text('$replies'),
             ),
             IconButton(
-                onPressed: () {}, icon: const Icon(Icons.arrow_downward)),
+                onPressed: () {
+                  setState(() {
+                    switch (widget.post!.likeType) {
+                      case LikeType.like:
+                        widget.post?.likes = (widget.post?.likes ?? 0) - 1;
+                        widget.post?.likeType = LikeType.none;
+                        break;
+                      case LikeType.unlike:
+                        widget.post?.likes = (widget.post?.likes ?? 0) + 2;
+                        widget.post?.likeType = LikeType.like;
+                        break;
+                      case LikeType.none:
+                        widget.post?.likes = (widget.post?.likes ?? 0) + 1;
+                        widget.post?.likeType = LikeType.like;
+                        break;
+                    }
+                  });
+                },
+                icon: Icon(
+                  Icons.arrow_upward,
+                  color: likeType == LikeType.like
+                      ? Colors.redAccent
+                      : Colors.black38,
+                )),
+            Padding(
+              padding: EdgeInsets.fromLTRB(8, 0, 8, 0),
+              child: Text('$likes'),
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    switch (widget.post!.likeType) {
+                      case LikeType.unlike:
+                        widget.post?.likes = (widget.post?.likes ?? 0) + 1;
+                        widget.post?.likeType = LikeType.none;
+                        break;
+                      case LikeType.like:
+                        widget.post?.likes = (widget.post?.likes ?? 0) - 2;
+                        widget.post?.likeType = LikeType.unlike;
+                        break;
+                      case LikeType.none:
+                        widget.post?.likes = (widget.post?.likes ?? 0) - 1;
+                        widget.post?.likeType = LikeType.unlike;
+                        break;
+                    }
+                  });
+                },
+                icon: Icon(
+                  Icons.arrow_downward,
+                  color: likeType == LikeType.unlike
+                      ? Colors.blueAccent
+                      : Colors.black38,
+                )),
             const Spacer(),
-            IconButton(onPressed: () {}, icon: const Icon(Icons.bookmark)),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    widget.post?.isBookmark =
+                        !(widget.post?.isBookmark ?? false);
+                  });
+                },
+                icon: Icon(Icons.bookmark,
+                    color: isBookmark ? Colors.blueAccent : Colors.black38)),
           ],
         ),
         const Divider(

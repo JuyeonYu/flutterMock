@@ -1,8 +1,15 @@
+enum LikeType { like, unlike, none }
+
 class Post {
   final int userId;
   final int id;
   final String title;
   final String body;
+  int likes = 0;
+  int views = 0;
+  int replies = 10;
+  bool isBookmark = false;
+  LikeType likeType = LikeType.none;
 
   Post(
       {required this.userId,
